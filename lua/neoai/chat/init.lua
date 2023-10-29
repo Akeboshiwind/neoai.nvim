@@ -14,7 +14,7 @@ local append_to_output = nil
 M.models = {}
 M.selected_model = 0
 
-M.setup_models = function()
+local setup_models = function()
     for _, model_obj in ipairs(config.options.models) do
         local raw_model = model_obj.model
         local models
@@ -33,15 +33,34 @@ M.setup_models = function()
     end
 end
 
-M.new_chat_history = function ()
+M.ensure_chat_history = function()
+    if M.chat_history == nil then
+        -- TODO: Allow loading most recent chat by default
+        --       Or supply function to to choose
+        --       Eg. Most recent chat, unless more than 1 day old
+        M.new_chat_history()
+        return true
+    end
+    return false
+end
+
+M.setup = function()
+    setup_models()
+    M.ensure_chat_history()
+end
+
+M.new_chat_history = function()
     local model = M.get_current_model()
     M.chat_history = ChatHistory:new(model.model, model.params, M.context)
 end
 
-M.select_next_model = function ()
+M.select_next_model = function()
     local length = #M.models
     M.selected_model = (M.selected_model + 1) % length
-    M.new_chat_history()
+    if not M.ensure_chat_history() then
+        local model = M.get_current_model()
+        M.chat_history:model(model.model, model.params)
+    end
 end
 
 ---Gets the current selected model
@@ -56,11 +75,15 @@ end
 M.set_context = function(buffer, line1, line2)
     local context = table.concat(vim.api.nvim_buf_get_lines(buffer, line1 - 1, line2, false), "\n")
     M.context = context
-    M.new_chat_history()
+    M.ensure_chat_history()
+end
+
+M.reset_context = function()
+    M.context = nil
 end
 
 M.reset = function()
-    M.context = nil
+    M.reset_context()
     M.chat_history = nil
 end
 
@@ -95,11 +118,11 @@ M.send_prompt = function(prompt, append_to_output_func, separators, on_complete)
         if separators then
             append_to_output("\n\n--------\n\n", 1)
         end
-        M.chat_history:add_message(false, output)
+        M.chat_history:assistant(output)
         on_complete(output)
     end
 
-    M.chat_history:add_message(true, prompt)
+    M.chat_history:user(prompt)
     local send_to_model = M.get_current_model().name.send_to_model
     send_to_model(M.chat_history, on_stdout_chunk, on_model_complete)
 end

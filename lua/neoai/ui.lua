@@ -67,6 +67,7 @@ M.create_ui = function()
     end
 
     local current_model = chat.get_current_model()
+    chat.ensure_chat_history()
 
     M.output_popup = Popup({
         enter = false,
@@ -151,8 +152,6 @@ M.create_ui = function()
         M.destroy_ui()
     end)
 
-    chat.new_chat_history()
-
     local input_buffer = M.input_popup.bufnr
     local output_buffer = M.output_popup.bufnr
 
@@ -206,6 +205,7 @@ M.create_ui = function()
         end
     end
 
+    M.render_chat_history()
     M.set_destroy_key_mappings(input_buffer)
 end
 
@@ -241,7 +241,7 @@ M.destroy_ui = function()
     M.submit_prompt = function()
         -- Empty function
     end
-    chat.reset()
+    chat.reset_context()
 end
 
 M.is_open = function()
@@ -292,6 +292,21 @@ M.append_to_output = function(txt, type)
             vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
         end
         vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+    end
+end
+
+local separator = "\n\n--------\n\n"
+
+M.render_chat_history = function()
+    for _, message in ipairs(chat.chat_history.messages) do
+        if message.role ~= "system" then
+            local type = 0
+            if message.role == "user" then
+                type = 1
+            end
+
+            M.append_to_output(message.content .. separator, type)
+        end
     end
 end
 

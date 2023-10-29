@@ -34,7 +34,7 @@ end
 ---@param options Options | nil The options for the plugin
 M.setup = function(options)
     config.setup(options)
-    chat.setup_models()
+    chat.setup()
     shortcuts.setup_shortcuts()
 end
 

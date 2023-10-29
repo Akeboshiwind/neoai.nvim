@@ -7,7 +7,6 @@ local M = {}
 M.name = "OpenAI"
 
 M._chunks = {}
-local raw_chunks = {}
 
 M.get_current_output = function()
     return table.concat(M._chunks, "")
@@ -15,36 +14,38 @@ end
 
 ---@param chunk string
 ---@param on_stdout_chunk fun(chunk: string) Function to call whenever a stdout chunk occurs
-M._recieve_chunk = function(chunk, on_stdout_chunk)
-    for line in chunk:gmatch("[^\n]+") do
-        local raw_json = string.gsub(line, "^data: ", "")
+M._receive_chunk = function(raw_chunks, chunks)
+    return function(chunk, on_stdout_chunk)
+        for line in chunk:gmatch("[^\n]+") do
+            local raw_json = string.gsub(line, "^data: ", "")
 
-        table.insert(raw_chunks, raw_json)
-        local ok, path = pcall(vim.json.decode, raw_json)
-        if not ok then
-            goto continue
-        end
+            table.insert(raw_chunks, raw_json)
+            local ok, path = pcall(vim.json.decode, raw_json)
+            if not ok then
+                goto continue
+            end
 
-        path = path.choices
-        if path == nil then
-            goto continue
+            path = path.choices
+            if path == nil then
+                goto continue
+            end
+            path = path[1]
+            if path == nil then
+                goto continue
+            end
+            path = path.delta
+            if path == nil then
+                goto continue
+            end
+            path = path.content
+            if path == nil then
+                goto continue
+            end
+            on_stdout_chunk(path)
+            -- append_to_output(path, 0)
+            table.insert(M._chunks, path)
+            ::continue::
         end
-        path = path[1]
-        if path == nil then
-            goto continue
-        end
-        path = path.delta
-        if path == nil then
-            goto continue
-        end
-        path = path.content
-        if path == nil then
-            goto continue
-        end
-        on_stdout_chunk(path)
-        -- append_to_output(path, 0)
-        table.insert(M._chunks, path)
-        ::continue::
     end
 end
 
@@ -61,8 +62,9 @@ M.send_to_model = function(chat_history, on_stdout_chunk, on_complete)
     }
     data = vim.tbl_deep_extend("force", {}, data, chat_history.params)
 
-    chunks = {}
-    raw_chunks = {}
+    M._chunks = {}
+    local raw_chunks = {}
+    local receive_chunk = M._receive_chunk(raw_chunks, M._chunks)
     utils.exec("curl", {
         "--silent",
         "--show-error",
@@ -75,7 +77,7 @@ M.send_to_model = function(chat_history, on_stdout_chunk, on_complete)
         "-d",
         vim.json.encode(data),
     }, function(chunk)
-        M._recieve_chunk(chunk, on_stdout_chunk)
+        receive_chunk(chunk, on_stdout_chunk)
     end, function(err, _)
         local total_message = table.concat(raw_chunks, "")
         local ok, json = pcall(vim.json.decode, total_message)
