@@ -12,7 +12,7 @@ local M = {}
 ---@param line1 integer | nil The first line number to use, nil will use '<
 ---@param line2 integer | nil The second line number to use, nil will use '>
 ---@return integer, integer line1 and line2
-local set_context = function (line1, line2)
+local set_context = function(line1, line2)
     local buffer = vim.api.nvim_get_current_buf()
 
     line1 = line1 or vim.fn.line("'<")
@@ -86,7 +86,7 @@ end
 ---@param line1 integer | nil The first line number for context range otherwise will use visual selection
 ---@param line2 integer | nil The second line number for context range otherwise will use visual selection
 ---@return boolean True if was opened
-M.context_toggle = function (toggle, prompt, line1, line2)
+M.context_toggle = function(toggle, prompt, line1, line2)
     set_context(line1, line2)
     return M.toggle(toggle, prompt)
 end
@@ -95,7 +95,7 @@ end
 ---@param prompt string The prompt to inject into the GUI if any (otherwise specify an empty string)
 ---@param line1 integer | nil The first line number for context range otherwise will use visual selection
 ---@param line2 integer | nil The second line number for context range otherwise will use visual selection
-M.context_smart_toggle = function (prompt, line1, line2)
+M.context_smart_toggle = function(prompt, line1, line2)
     set_context(line1, line2)
     M.smart_toggle(prompt)
 end

@@ -13,8 +13,7 @@ M.input_popup = nil
 M.layout = nil
 
 ---@param prompt string
-M.submit_prompt = function(prompt)
-end
+M.submit_prompt = function(prompt) end
 
 M.clear_input = function()
     if M.input_popup ~= nil then
@@ -26,7 +25,7 @@ end
 M.get_component_heights = function(output_height_percentage)
     local lines_height = vim.api.nvim_get_option("lines")
     local statusline_height = vim.o.laststatus == 0 and 0 or 1 -- height of the statusline if present
-    local cmdline_height = vim.o.cmdheight                  -- height of the cmdline if present
+    local cmdline_height = vim.o.cmdheight -- height of the cmdline if present
     local tabline_height = vim.o.showtabline == 0 and 0 or 1 -- height of the tabline if present
     local total_height = lines_height
     local used_height = statusline_height + cmdline_height + tabline_height
@@ -166,7 +165,13 @@ M.create_ui = function()
     if string.lower(config.options.ui.submit) == "<enter>" then
         vim.api.nvim_buf_set_keymap(input_buffer, "i", "<C-Enter>", "<Enter>", opts)
     end
-    vim.api.nvim_buf_set_keymap(input_buffer, "i", config.options.ui.submit, "<cmd>lua require('neoai.ui').submit_prompt()<cr>", opts)
+    vim.api.nvim_buf_set_keymap(
+        input_buffer,
+        "i",
+        config.options.ui.submit,
+        "<cmd>lua require('neoai.ui').submit_prompt()<cr>",
+        opts
+    )
 
     local key = config.options.mappings["select_up"]
     if key ~= nil then

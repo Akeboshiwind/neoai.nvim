@@ -19,7 +19,7 @@ local setup_models = function()
         local raw_model = model_obj.model
         local models
         if type(raw_model) == "string" then
-            models = { raw_model, }
+            models = { raw_model }
         else
             models = raw_model
         end
@@ -65,8 +65,8 @@ end
 
 ---Gets the current selected model
 ---@return { name: ModelModule, model: string, params: table<string, string> | nil } current_model The current model
-M.get_current_model = function ()
-    return M.models[M.selected_model+1]
+M.get_current_model = function()
+    return M.models[M.selected_model + 1]
 end
 
 ---@param buffer number
@@ -99,18 +99,18 @@ end
 ---@param separators boolean True if separators should be included
 ---@param on_complete fun(output: string) Called when completed
 M.send_prompt = function(prompt, append_to_output_func, separators, on_complete)
-    append_to_output = function (txt, type)
+    append_to_output = function(txt, type)
         local ok, _ = pcall(append_to_output_func, txt, type)
     end
     if separators then
         append_to_output(prompt .. "\n\n--------\n\n", 1)
     end
 
-    local on_stdout_chunk = function (chunk)
+    local on_stdout_chunk = function(chunk)
         append_to_output(chunk, 0)
     end
 
-    local on_model_complete = function (err, output)
+    local on_model_complete = function(err, output)
         if err ~= nil then
             vim.notify("NeoAI Error: " .. err, vim.log.levels.ERROR)
             return
