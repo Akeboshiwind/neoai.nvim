@@ -4,9 +4,7 @@
 local M = {}
 
 M.deprecation = function(what, instead)
-    vim.notify(what .. " is deprecated, use " .. instead, vim.log.levels.WARN, {
-        title = "NeoAI",
-    })
+    M.warn(what .. " is deprecated, use " .. instead)
 end
 
 M.debug = function(message)
