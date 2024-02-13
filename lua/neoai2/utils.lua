@@ -1,13 +1,39 @@
 local M = {}
 
-function M.concat(a, b)
+function M.concat(a, ...)
     local out = { unpack(a) }
 
-    for _, v in ipairs(b) do
-        table.insert(out, v)
+    for _, tbl in ipairs({ ... }) do
+        for _, v in ipairs(tbl) do
+            table.insert(out, v)
+        end
     end
 
     return out
+end
+
+function M.clone(tbl)
+    local ret = {}
+
+    -- Keyed entries.
+    for k, v in pairs(tbl) do
+        if type(v) == "table" then
+            ret[k] = M.clone(v)
+        else
+            ret[k] = v
+        end
+    end
+
+    -- Indexed entries.
+    for k, v in ipairs(tbl) do
+        if type(v) == "table" then
+            ret[k] = M.clone(v)
+        else
+            ret[k] = v
+        end
+    end
+
+    return ret
 end
 
 -- TODO: replace with vim.split(input, delimiter, {plain=true, trimempty=true})

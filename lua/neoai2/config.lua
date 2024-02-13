@@ -47,6 +47,7 @@ function default_config()
                 models = {
                     ["gpt-3.5-turbo"] = {},
                     ["gpt-4"] = {},
+                    ["gpt-4-turbo-preview"] = {},
                 },
             },
             ollama = {
@@ -61,8 +62,9 @@ function default_config()
                 params = {},
             },
             mappings = {
-                ["<leader>ai"] = "Inject",
-                ["<C-c>"] = "Cancel",
+                ["<leader>ai"] = { "Inject", desc = "NeoAI Inject" },
+                -- TODO: Cancel more than just injects?
+                ["<C-c>"] = { "Cancel", desc = "NeoAI Cancel Inject" },
             },
         },
         chat = {
@@ -73,35 +75,37 @@ function default_config()
             },
             default_model = {
                 provider = "openai",
-                model = "gpt-3.5-turbo",
+                model = "gpt-4-turbo-preview",
                 params = {},
             },
             mappings = {
                 n = {
-                    ["<leader>aC"] = "NewChat",
-                    ["<leader>ac"] = "ToggleChat",
+                    ["<leader>ac"] = { "ToggleChat", desc = "NeoAI Toggle Chat" },
+                    ["<leader>aC"] = { "NewChat", desc = "NeoAI New Chat" },
+                    ["<leader>ap"] = { "ToggleChatSelectModel" },
+                    ["<leader>aP"] = { "NewChatSelectModel" },
                 },
                 v = {
-                    ["<leader>aC"] = "NewChat",
-                    ["<leader>ac"] = "ToggleChat",
+                    ["<leader>ac"] = { "ToggleChat", desc = "NeoAI Toggle Chat" },
+                    ["<leader>aC"] = { "NewChat", desc = "NeoAI New Chat" },
                 },
             },
             input = {
                 mappings = {
                     n = {
-                        ["<S-Enter>"] = "SubmitPrompt",
-                        ["<C-k>"] = "SelectUp",
-                        ["<leader>aR"] = "RegenerateLastPrompt",
+                        ["<S-Enter>"] = { "SubmitPrompt", desc = "Submit Prompt" },
+                        ["<C-k>"] = { "SelectUp", desc = "Select Up" },
+                        ["<leader>aR"] = { "RegenerateLastPrompt", desc = "NeoAI Regenerate Last Prompt" },
                     },
                     i = {
-                        ["<S-Enter>"] = "SubmitPrompt",
+                        ["<S-Enter>"] = { "SubmitPrompt", desc = "Submit Prompt" },
                     },
                 },
             },
             output = {
                 mappings = {
                     n = {
-                        ["<C-j>"] = "SelectDown",
+                        ["<C-j>"] = { "SelectDown", desc = "Select Down" },
                     },
                 },
             },

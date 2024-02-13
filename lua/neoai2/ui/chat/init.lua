@@ -38,6 +38,31 @@ function M.setup(config)
         },
         {
             desc = "New Chat Window",
+            plug = "<Plug>Neoai2Chat:ToggleChatSelectModel",
+            rhs = function()
+                -- TODO: Don't hardcode provider
+                local provider = "openai"
+                local models = config.providers[provider].models
+                local model_names = vim.tbl_keys(models)
+
+                vim.ui.select(model_names, {
+                    prompt = "Select a model:",
+                }, function(model)
+                    local params = models[model]
+                    local s = chat.snapshot
+
+                    snapshot.set_model(s, provider, model, params)
+
+                    append_context(s)
+
+                    chat:set_snapshot(s)
+
+                    chat:mount()
+                end)
+            end,
+        },
+        {
+            desc = "New Chat Window",
             plug = "<Plug>Neoai2Chat:NewChat",
             rhs = function()
                 local s = default_snapshot(chat_cfg)
@@ -47,6 +72,29 @@ function M.setup(config)
                 chat:set_snapshot(s)
 
                 chat:mount()
+            end,
+        },
+        {
+            desc = "New Chat Window",
+            plug = "<Plug>Neoai2Chat:NewChatSelectModel",
+            rhs = function()
+                -- TODO: Don't hardcode provider
+                local provider = "openai"
+                local models = config.providers[provider].models
+                local model_names = vim.tbl_keys(models)
+
+                vim.ui.select(model_names, {
+                    prompt = "Select a model:",
+                }, function(model)
+                    local params = models[model]
+                    local s = snapshot.new(provider, model, params)
+
+                    append_context(s)
+
+                    chat:set_snapshot(s)
+
+                    chat:mount()
+                end)
             end,
         },
     }
