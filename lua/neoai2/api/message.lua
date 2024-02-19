@@ -1,22 +1,14 @@
-local M = {}
-
-function message(role, content)
-    return {
-        role = role,
-        content = content,
-    }
+-- [nfnl] Compiled from lua/neoai2/api/message.fnl by https://github.com/Olical/nfnl, do not edit.
+local function message(role, content)
+  return {content = content, role = role}
 end
-
-function M.system(content)
-    return message("system", content)
+local function system(content)
+  return message("system", content)
 end
-
-function M.user(content)
-    return message("user", content)
+local function user(content)
+  return message("user", content)
 end
-
-function M.assistant(content)
-    return message("assistant", content)
+local function assistant(content)
+  return message("assistant", content)
 end
-
-return M
+return {system = system, user = user, assistant = assistant}

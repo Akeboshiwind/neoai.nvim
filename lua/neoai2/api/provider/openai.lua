@@ -1,148 +1,92 @@
-local logger = require("neoai.logger")
-local curl = require("neoai2.curl")
-local utils = require("neoai2.utils")
-
-local M = {}
-
+-- [nfnl] Compiled from lua/neoai2/api/provider/openai.fnl by https://github.com/Olical/nfnl, do not edit.
+local _local_1_ = require("nfnl.module")
+local autoload = _local_1_["autoload"]
+local _local_2_ = autoload("nfnl.core")
+local get_in = _local_2_["get-in"]
+local first = _local_2_["first"]
+local logger = autoload("neoai2.logger")
+local curl = autoload("neoai2.curl")
+local u = autoload("neoai2.utils")
+local utils = {}
+utils.delta = function(chunk)
+  return get_in(chunk, {"choices", 1, "delta"})
+end
+utils.message = function(response)
+  return get_in(response, {"choices", 1, "message"})
+end
+local chat = {}
 local base_url = "https://api.openai.com/v1"
-
-M.utils = {}
-
-function M.utils.delta(chunk)
-    return chunk.choices[1].delta
-end
-
-function M.utils.message(response)
-    return response.choices[1].message
-end
-
-M.chat = {}
-
-local chat_completions_url = base_url .. "/chat/completions"
-
-function M.chat.sync_completions(snapshot)
-    local api_key = snapshot.provider_config.api_key
-
-    local model = snapshot.model
-    local params = snapshot.params
-    local messages = snapshot.messages
-
-    local data = {
-        model = model,
-        messages = messages,
-    }
-    data = vim.tbl_deep_extend("force", {}, data, params)
-
-    local output = vim.fn.system({
-        "curl",
-        "--silent",
-        "--show-error",
-        "--no-buffer",
-        chat_completions_url,
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        "Authorization: Bearer " .. api_key,
-        "-d",
-        vim.json.encode(data),
-    })
-
-    if utils.shell_error() then
-        return nil, "Failed to run curl"
-    end
-
+local chat_completions_url = (base_url .. "/chat/completions")
+chat.sync_completions = function(snapshot)
+  local api_key = snapshot.provider_config["api-key"]
+  local data = vim.tbl_deep_extend("force", {messages = snapshot.messages, model = snapshot.model}, snapshot.params)
+  local output = vim.fn.system({"curl", "--silent", "--show-error", "--no-buffer", chat_completions_url, "-H", "Content-Type: application/json", "-H", ("Authorization: Bearer " .. api_key), "-d", vim.json.encode(data)})
+  if u.shell_error() then
+    return nil, "Failed to run curl"
+  else
     local ok, json = pcall(vim.json.decode, output)
     if not ok then
-        return nil, "Failed to decode JSON"
+      return nil, "Failed to decode JSON"
+    else
+      return json
     end
-
-    return json
+  end
 end
-
-function merge_chunks(chunks)
-    if chunks[1] == nil then
-        return {}
-    end
-
-    local out_choice = {
-        message = {},
-    }
-
-    for _, chunk in ipairs(chunks) do
-        local choice = chunk.choices[1]
+local function merge_chunks(chunks)
+  if (first(chunks) == nil) then
+    return {}
+  else
+    local result = first(chunks)
+    local function _5_()
+      local out_choice = {message = {}}
+      for _, chunk in ipairs(chunks) do
+        local choice = first(chunk.choices)
         local delta = choice.delta
-
         out_choice.index = choice.index
         out_choice.finish_reason = choice.finish_reason
-
-        if delta.role ~= nil then
-            out_choice.message.role = delta.role
-        end
-
-        if delta.content ~= nil then
-            old_content = out_choice.message.content or ""
-            out_choice.message.content = old_content .. delta.content
-        end
-    end
-
-    local result = chunks[1]
-    result.choices = { out_choice }
-
-    return result
-end
-
-function M.chat.completions(snapshot, on_chunk, on_complete)
-    local api_key = snapshot.provider_config.api_key
-
-    local model = snapshot.model
-    local params = snapshot.params
-    local messages = snapshot.messages
-
-    local data = {
-        model = model,
-        messages = messages,
-        stream = true,
-    }
-    data = vim.tbl_deep_extend("force", {}, data, params)
-
-    local args = {
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        "Authorization: Bearer " .. api_key,
-        "-d",
-        vim.json.encode(data),
-    }
-
-    local chunks = {}
-    local on_event = function(event)
-        local data = event.data
-
-        if string.find(data, "%[DONE%]") then
-            return
-        end
-
-        local ok, json = pcall(vim.json.decode, data)
-        -- TODO: Don't just throw away errors?
-        if not ok or json.error ~= nil then
-            logger.warning("Failed to decode JSON: " .. data)
-            return
-        end
-
-        table.insert(chunks, json)
-
-        on_chunk(json)
-    end
-
-    local wrap_on_complete = function(err)
-        if err ~= nil then
-            on_complete(err)
+        if (delta.role ~= nil) then
+          out_choice.message.role = delta.role
         else
-            on_complete(nil, merge_chunks(chunks))
         end
+        if (delta.content ~= nil) then
+          out_choice.message.content = ((out_choice.message.content or "") .. delta.content)
+        else
+        end
+        out_choice = out_choice
+      end
+      return out_choice
     end
-
-    return curl.stream_ss_events(chat_completions_url, args, on_event, wrap_on_complete)
+    result.choices = {_5_()}
+    return result
+  end
 end
-
-return M
+chat.completions = function(snapshot, on_chunk, on_complete)
+  local api_key = snapshot.provider_config["api-key"]
+  local params = snapshot.params
+  local data = vim.tbl_deep_extend("force", {messages = snapshot.messages, model = snapshot.model, stream = true}, params)
+  local args = {"-H", "Content-Type: application/json", "-H", ("Authorization: Bearer " .. api_key), "-d", vim.json.encode(data)}
+  local chunks = {}
+  local function on_event(event)
+    local data0 = event.data
+    if not string.find(data0, "%[DONE%]") then
+      local ok, json = pcall(vim.json.decode, data0)
+      if (not ok or (json.error ~= nil)) then
+        return logger.warning(("Failed to decode JSON: " .. data0))
+      else
+        table.insert(chunks, json)
+        return on_chunk(json)
+      end
+    else
+      return nil
+    end
+  end
+  local function wrap_on_complete(err)
+    if (err ~= nil) then
+      return on_complete(err)
+    else
+      return on_complete(nil, merge_chunks(chunks))
+    end
+  end
+  return curl.stream_ss_events(chat_completions_url, args, on_event, wrap_on_complete)
+end
+return {utils = utils, chat = chat}
